@@ -11,7 +11,7 @@ class BPTree(val degree: Int) {
 
     fun insert(key: Int, value: String) {
         println("Inserting value '$value' for key '$key'")
-        val newNodeInfo =  root.insert(key, value, degree)
+        val newNodeInfo = root.insert(key, value, degree)
         if (newNodeInfo != null) {
             val (newKey, newNode) = newNodeInfo
             root = InternalNode(mutableListOf(newKey), mutableListOf(root, newNode))
@@ -24,7 +24,7 @@ class BPTree(val degree: Int) {
         // Depth-first search for leafs
         val output = mutableListOf<String>()
         val nodesToCheck = ArrayDeque(listOf(root))
-        while(nodesToCheck.isNotEmpty()){
+        while (nodesToCheck.isNotEmpty()) {
             when (val node = nodesToCheck.removeFirst()) {
                 is LeafNode -> output += node.values
                 is InternalNode -> nodesToCheck.addAll(node.children)
@@ -67,15 +67,9 @@ class BPTree(val degree: Int) {
 //            nextRow = mutableListOf()
 //        }
 //    }
-    override fun toString(): String = buildString { root.appendTo(this, 0) }
+
+    override fun toString(): String = buildString { root.appendTo(this, 0) }.removeSuffix("\n")
 }
-
-private fun StringBuilder.joinToStringAppend(collection: Collection<*>, separator: String) =
-    collection.forEachIndexed { index, value ->
-        append(value)
-        if (index < collection.size - 1) append(separator)
-    }.let { this }
-
 
 
 sealed interface Node {
@@ -89,7 +83,8 @@ sealed interface Node {
     /**
      * Insert a key-value pair into the subtree defined by this node. When, after insertion, a node exceeds its capacity
      * (at most [degree]` - 1` children for [InternalNode]s or [degree] values for [LeafNode]s) it will be split.
-     * This splitting will propagate upwards as long as nodes exceed their capacity.
+     * This splitting will propagate upwards as long as nodes exceed their capacity. When this node is split it's
+     * mutated, the upper half of the keys and values are moved to a new node.
      *
      * @return a [NewNode] in case this node was split, or `null` otherwise.
      */
@@ -112,21 +107,21 @@ sealed interface Node {
 data class NewNode(val key: Int, val node: Node)
 data class SplitResult(val key: Int, val leftNode: Node, val rightNode: Node)
 
-private fun Node.helper(key: Int): Int = keys.withIndex()
-    .firstNotNullOfOrNull { if(it.value > key) it.index else null }
+private fun Node.indexOf(key: Int): Int = keys.withIndex()
+    .firstNotNullOfOrNull { if (it.value > key) it.index else null }
     ?: keys.size
 
-private operator fun Int.plus(bool: Boolean) = if(bool) this + 1 else this
+private operator fun Int.plus(bool: Boolean) = if (bool) this + 1 else this
 private const val ROUND_UP_SPLITTING = false
 
 
-data class LeafNode (
+data class LeafNode(
     override val keys: MutableList<Int>,
     val values: MutableList<String>,
 ) : Node {
     override fun get(key: Int): String? {
         val index = keys.indexOf(key)
-        return if(index >= 0) {
+        return if (index >= 0) {
             values[index]
         } else {
             null
@@ -134,7 +129,7 @@ data class LeafNode (
     }
 
     override fun insert(key: Int, value: String, degree: Int): NewNode? {
-        val index = helper(key)
+        val index = indexOf(key)
         keys.add(index, key)
         values.add(index, value)
 
@@ -146,7 +141,7 @@ data class LeafNode (
     }
 
     override fun split(index: Int): SplitResult {
-        // EXAMPLE:
+        // EXAMPLE: split at 1
         //              [ 1 ]
         // 0|1|2   =>   /   \
         //             0    1|2
@@ -166,28 +161,25 @@ data class LeafNode (
 
     override fun isConsistent(degree: Int, isRoot: Boolean) {
         check(keys.size == values.size) { "A leaf-node should have exactly as many keys as values" }
-        if (!isRoot) check(degree/2 <= keys.size ) {  // TODO: check, not sure if this is right
-            "A non-root leaf node should have at least ${degree/2} keys, but found ${keys.size} (degree = $degree)"
+        if (!isRoot) check(degree / 2 <= keys.size) {  // TODO: check, not sure if this is right
+            "A non-root leaf node should have at least ${degree / 2} keys, but found ${keys.size} (degree = $degree)"
         }
         check(keys.size < degree) { "Leaf node should have less than $degree keys" } // TODO: or <= degree ?
     }
 
     override fun appendTo(stringBuilder: StringBuilder, depth: Int): StringBuilder =
-        stringBuilder.append("  ".repeat(depth))
-            .append("Leaf [")
-            .joinToStringAppend(keys.zip(values), ", ")
-            .append("]\n")
+        keys.zip(values).joinTo(stringBuilder, prefix = "  ".repeat(depth) + "Leaf [", postfix = "]\n")
 }
 
 
 data class InternalNode(
     override val keys: MutableList<Int>,
-    val children: MutableList<Node>
-): Node {
-    override fun get(key: Int): String? = children[helper(key)].get(key)
+    val children: MutableList<Node>,
+) : Node {
+    override fun get(key: Int): String? = children[indexOf(key)].get(key)
 
     override fun insert(key: Int, value: String, degree: Int): NewNode? {
-        val index = helper(key)
+        val index = indexOf(key)
 
         val newNodeInfo = children[index].insert(key, value, degree)
 
@@ -195,7 +187,7 @@ data class InternalNode(
             // one of the children was split, insert the new child
             val (newKey, newChild) = newNodeInfo
             keys.add(index, newKey)
-            children.add(index+1, newChild)
+            children.add(index + 1, newChild)
 
             // Check if this itself also needs to be split
             if (keys.size > degree) {
@@ -207,7 +199,7 @@ data class InternalNode(
     }
 
     override fun split(index: Int): SplitResult {
-        // EXAMPLE:                                      [ 3 ]
+        // EXAMPLE: split at 2                           [ 3 ]
         //                                             /       \
         //   [ 1 | 2 | 3 | 4 ]       =>        [ 1 | 2 ]        [ 4 ]
         //   /   |   |   |   \                 /   |   \         /  \
@@ -216,12 +208,13 @@ data class InternalNode(
 
         val chosenOne = keys[index]  // The one that ascends: the key that is _moved_ up
 
+        // split node into a left-hand side (this) and right-hand side (rhs)
         val rhs = InternalNode(
-            keys = keys.drop(index+1).toMutableList(),  // exclude key that ascends
-            children = children.drop(index+1).toMutableList(),
+            keys = keys.drop(index + 1).toMutableList(),  // exclude key that ascends
+            children = children.drop(index + 1).toMutableList(),
         )
         this.keys.subList(index, this.keys.size).clear()  // drop both key that ascend and everything that follows
-        this.children.subList(index+1, this.children.size).clear()  // drop the children
+        this.children.subList(index + 1, this.children.size).clear()
 
         return SplitResult(chosenOne, leftNode = this, rightNode = rhs)
 
@@ -244,10 +237,7 @@ data class InternalNode(
     }
 
     override fun appendTo(stringBuilder: StringBuilder, depth: Int): StringBuilder {
-        stringBuilder.append("  ".repeat(depth))
-            .append("Node [")
-            .joinToStringAppend(keys, ", ")
-            .append("]\n")
+        keys.joinTo(stringBuilder, prefix = "  ".repeat(depth) + "Node [", postfix = "]\n")
         children.forEach {
             it.appendTo(stringBuilder, depth + 1)
         }
