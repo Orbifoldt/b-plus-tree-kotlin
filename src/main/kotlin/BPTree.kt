@@ -8,6 +8,10 @@ class BPTree(val degree: Int) {
         require(degree > 1)
     }
 
+    internal constructor(degree: Int, root: Node) : this(degree) {
+        this.root = root
+    }
+
     var root: Node = LeafNode(mutableListOf(), mutableListOf(), null, null)
         private set
 
