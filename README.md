@@ -135,7 +135,7 @@ val borrowedKey = rightSibling.keys.removeFirst()
 val borrowedValue = rightSibling.values.removeFirst()
 child.keys.add(borrowedKey)
 child.values.add(borrowedValue)
-keys[index] = rightSibling.keys.first()  // update parent's key corresponding to the right sibling
+keys[index] = rightSibling.keys.first()  // update parent's key corresponding to right sibling
 ```
 ![Borrowing from right sibling leaf](/bptree_borrow-right-leaf.excalidraw.svg)
 
