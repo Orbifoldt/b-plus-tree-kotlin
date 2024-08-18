@@ -28,8 +28,8 @@ class BPTree(val degree: Int) {
     fun remove(key: Int): String? {
         println("Deleting '$key'")
         val result =  root.remove(key, degree)
-        println("After deletion:")
-        println(this)
+        // TODO: handle underflow of root itself
+        // TODO: write tests
         return result
     }
 

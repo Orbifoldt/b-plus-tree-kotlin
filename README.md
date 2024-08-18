@@ -84,9 +84,10 @@ The first two things are straightforward to implement:
 fun remove(key: Int, degree: Int): String? {
     val index = findIndexOf(key)
     val child = children[index]
-    val value = child.remove(key, degree) ?: return null  // If nothing was deleted just return null
+    val value = child.remove(key, degree) 
+        ?: return null  // If nothing was deleted just return null
 
-    if(child.keys.size >= minKeys(degree)) return value  // No underflow, so no need to merge or borrow
+    if(child.keys.size >= minKeys(degree)) return value  // No underflow, so no merge/borrow
     if(keys.size == 0) return value  // We're at the root, so no need to handle underflow
     
     TODO("deal with underflow")
@@ -295,3 +296,5 @@ child.children.moveInto(rightSibling.children, index = 0)
 </details>
 
 
+#### Delete in the tree itself
+Finally, in the tree we need to deal with the case that the root is left with only a single child. In that case, this child is promoted to be the new root.
