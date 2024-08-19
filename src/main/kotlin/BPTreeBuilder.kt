@@ -8,8 +8,9 @@ package org.example
  * ```kotlin
  * val tree = buildBPTree(degree = 3, 8) {
  *         internal(4) {
- *             internal(1) {
+ *             internal(1, 2) {
  *                 leaf(0 to "0")
+ *                 leaf(1 to "1")
  *                 leaf(2 to "2")
  *             }
  *             internal(6) {
@@ -25,7 +26,7 @@ package org.example
  *                 }
  *                 leaf(10 to "10")
  *             }
- *             internal(14) {
+ *             internal(13) {
  *                 leaf(12 to "12")
  *                 leaf(14 to "14")
  *             }
