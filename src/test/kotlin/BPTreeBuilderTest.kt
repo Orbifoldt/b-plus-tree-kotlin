@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test
 class BPTreeBuilderTest {
     private val tree = buildBPTree(degree = 3, 8) {
         internal(4) {
-            internal(1) {
+            internal(1, 2) {
                 leaf(0 to "0")
+                leaf(1 to "1")
                 leaf(2 to "2")
             }
             internal(6) {
@@ -44,23 +45,24 @@ class BPTreeBuilderTest {
     @Test
     fun `Should be able to list all values in the tree`() {
         // This also verifies that the neighbor are set correctly
-        assertThat(tree.values).containsExactly("0", "2", "4", "5", "6", "7", "8", "10", "12", "14")
+        assertThat(tree.values).containsExactly("0", "1", "2", "4", "5", "6", "7", "8", "9", "10", "12", "14")
     }
 
     @Test
     fun `Should be able to delete values from the created tree`() {
         assertThat(tree.remove(4)).isEqualTo("4")
+        assertThat(tree.remove(1)).isEqualTo("1")
         assertThat(tree.remove(7)).isEqualTo("7")
         assertThat(tree.remove(3)).isNull()
         assertThat(tree.remove(4)).isNull()
         assertThat(tree.remove(0)).isEqualTo("0")
-        assertThat(tree.values).containsExactly("2", "5", "6", "8", "10", "12", "14")
+        assertThat(tree.values).containsExactly("2", "5", "6", "8", "9", "10", "12", "14")
     }
 
     @Nested
     inner class `While creating an invalid tree, should throw IllegalArgumentException` {
         @Test
-        fun `when number of keys doesn't match number of children`(){
+        fun `when number of keys doesn't match number of children`() {
             assertThatThrownBy {
                 buildBPTree(degree = 4, 3, 5) {
                     leaf(0 to "0")
@@ -69,7 +71,7 @@ class BPTreeBuilderTest {
         }
 
         @Test
-        fun `when a mix of leaf and internal nodes is provided`(){
+        fun `when a mix of leaf and internal nodes is provided`() {
             assertThatThrownBy {
                 buildBPTree(degree = 3, 8) {
                     leaf(6 to "6")
@@ -82,7 +84,7 @@ class BPTreeBuilderTest {
         }
 
         @Test
-        fun `when number of values per leaf is too low for the degree`(){
+        fun `when number of values per leaf is too low for the degree`() {
             assertThatThrownBy {
                 buildBPTree(degree = 5, 8, 33) {
                     leaf(6 to "6")
@@ -93,7 +95,7 @@ class BPTreeBuilderTest {
         }
 
         @Test
-        fun `when the keys are not sorted correctly`(){
+        fun `when the keys are not sorted correctly`() {
             assertThatThrownBy {
                 buildBPTree(degree = 3, 33, 8) {
                     leaf(6 to "6")
