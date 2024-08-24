@@ -30,13 +30,14 @@ class BPTree(val degree: Int) {
 
     @Synchronized  // TODO: optimize locking
     fun remove(key: Int): String? {
-        println("Deleting '$key'")
         val result =  root.remove(key, degree)
-        // TODO: handle underflow of root itself
-        // TODO: write tests
+
+        if(root is InternalNode && root.keys.isEmpty()){
+            assert((root as InternalNode).children.size == 1) { "When there are no keys there should be 1 child" }
+            root = (root as InternalNode).children.first()
+        }
         return result
     }
-
 
     internal fun validate() {
         validateNode(root, isRoot = true)

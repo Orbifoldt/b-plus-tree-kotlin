@@ -2,14 +2,10 @@ import NodeAssertions.andChildren
 import NodeAssertions.containsExactly
 import NodeAssertions.containsExactlyKeys
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.InstanceOfAssertFactories
-import org.assertj.core.api.ObjectAssert
 import org.example.InternalNode
 import org.example.LeafNode
-import org.example.Node
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.lang.StringBuilder
 
 
 class NodeTest {
@@ -593,22 +589,5 @@ class NodeTest {
 
     private fun setNeighborsMulti(vararg nodes: InternalNode){
         nodes.toList().zipWithNext { left, right -> setNeighbors(left, right) }
-    }
-}
-
-object NodeAssertions {
-    fun ObjectAssert<LeafNode>.containsExactly(vararg keyValuePairs: Pair<Int, String>): ObjectAssert<LeafNode> = this.also {
-        extracting { it.keys.zip(it.values) }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*keyValuePairs)
-    }
-
-    fun ObjectAssert<InternalNode>.containsExactlyKeys(vararg keys: Int): ObjectAssert<InternalNode> = this.also {
-        extracting { it.keys }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*keys.toTypedArray())
-    }
-
-    fun ObjectAssert<InternalNode>.andChildren(vararg children: Node): ObjectAssert<InternalNode> = this.also {
-        extracting { it.children }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*children)
     }
 }

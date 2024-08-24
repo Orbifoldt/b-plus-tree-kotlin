@@ -1,6 +1,14 @@
+import BPTreeAssertions.isValid
+import NodeAssertions.containsExactly
+import NodeAssertions.containsExactlyKeys
+import NodeAssertions.isEmpty
+import NodeAssertions.isInternal
+import NodeAssertions.isLeaf
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatNoException
 import org.example.BPTree
+import org.example.LeafNode
+import org.example.buildBPTree
 import org.junit.jupiter.api.Test
 
 class BPTreeTest {
@@ -147,8 +155,70 @@ class BPTreeTest {
         tree.remove(9)
         tree.remove(10)
 
-        assertThatNoException().isThrownBy { tree.validate() }
+        assertThat(tree).isValid()
     }
 
-    // TODO: test with even degree
+    @Test
+    fun `When deleting causes the root have a single child, that child should become the new root`(){
+        val tree = buildBPTree(degree = 6, 10) {  // all nodes at minimum occupancy
+            internal(2,6){
+                leaf(0 to "0", 1 to "1")
+                leaf(2 to "2", 4 to "4")
+                leaf(6 to "6", 9 to "9")
+            }
+            internal(15, 17){
+                leaf(10 to "10", 14 to "14")
+                leaf(15 to "15", 16 to "16")
+                leaf(17 to "17", 22 to "22")
+            }
+        }
+
+        tree.remove(15)
+
+        assertThat(tree.root).isInternal()
+            .containsExactlyKeys(2, 6, 10, 17)
+        assertThat(tree).isValid()
+    }
+
+    @Test
+    fun `When after deleting the root that is internal has only single leaf child, that leaf should become new root`(){
+        val tree = buildBPTree(degree = 6, 2) {  // all nodes at minimum occupancy
+            leaf(0 to "0", 1 to "1")
+            leaf(2 to "2", 4 to "4")
+        }
+
+        tree.remove(4)
+
+        assertThat(tree.root).isLeaf()
+            .containsExactly(0 to "0", 1 to "1", 2 to "2")
+        assertThat(tree).isValid()
+    }
+
+    @Test
+    fun `When after deleting the root becomes a leaf it is allowed to have down to zero values`(){
+        val tree = buildBPTree(degree = 6, 2) {  // all nodes at minimum occupancy
+            leaf(0 to "0", 1 to "1")
+            leaf(2 to "2", 4 to "4")
+        }
+
+        tree.remove(0)
+
+        assertThat(tree.root).isLeaf()
+            .containsExactly(1 to "1", 2 to "2", 4 to "4")
+        assertThat(tree).isValid()
+
+        tree.remove(2)
+        assertThat(tree.root).isLeaf()
+            .containsExactly(1 to "1", 4 to "4")
+        assertThat(tree).isValid()
+
+        tree.remove(4)
+        assertThat(tree.root).isLeaf()
+            .containsExactly(1 to "1")
+        assertThat(tree).isValid()
+
+        tree.remove(1)
+        assertThat(tree.root).isLeaf().isEmpty()
+        assertThat(tree).isValid()
+    }
 }

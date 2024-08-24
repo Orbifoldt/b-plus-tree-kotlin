@@ -88,10 +88,12 @@ To rebalance the tree, these steps are followed:
 2. If the left sibling itself has exactly the minimum number of keys (`⌈M/2⌉ - 1`), then merge the current node into that sibling.
 3. Else, if the node has a right sibling, try to borrow from that one.
 4. If the right sibling has exactly the minimum number of keys (`⌈M/2⌉ - 1`), then merge the current node into that sibling.
-5. Else, if the node has no siblings, it must be the root. If it has a child, we'll promote that child to be the new root.
+5. Else, if the node has no siblings, it must be the root. If it has only a single child, we'll promote that child to be the new root.
 
 | :exclamation:  In borrowing or merging we only look at siblings, i.e. neighboring nodes that share the _same_ parent! |
 |-----------------------------------------------------------------------------------------------------------------------|
+
+So, if some key-value pair needs to be deleted from a tree, we'll start at the root and move downwards to delete it from the leaf, after which we move back up while borrowing and merging whenever nodes are under-occupied, and finally possibly re-assigning the root of the tree. 
 
 ### Deletion examples
 See [YouTube - B+Tree Deletions - Stephan Burroughs](https://www.youtube.com/watch?v=QrbaQDSuxIM) for a plethora of examples. Do note that they use slightly different conventions for the number of allowed values in the leafs. Also, at `1:09` they state that only the left most nodes look to the right for borrowing or merging; in our conventions the more correct statement is that only the left most children of any given node have to look right to borrow or merge (that is, a node only looks at its siblings and not at other neighbors).
@@ -348,4 +350,22 @@ child.children.moveInto(rightSibling.children, index = 0)
 
 
 ### Implementation: Delete in the tree itself
-Finally, in the tree we need to deal with the case that the root is left with only a single child. In that case, this child is promoted to be the new root.
+Now, for the tree, when we want to delete some entry we can simply delete it from the root node (which then recursively propagates downwards). Then, finally, we do need to deal with the case that the root is left with only a single child. In that case, this only child is promoted to be the new root. 
+```kotlin
+class BPTree {
+    var root: Node
+    
+    fun remove(key: Int): String? {
+        val result = root.remove(key, degree)
+
+        if (root is InternalNode && root.keys.isEmpty()) {
+            assert((root as InternalNode).children.size == 1) { 
+                "When there are no keys left there should be exactly 1 child" 
+            }
+            root = (root as InternalNode).children.first()
+        }
+        return result
+    }
+}
+```
+Note that if the root is a leaf node, we don't reassign it. This nicely deals with the edge-cases where the tree is left with only zero or one values.
