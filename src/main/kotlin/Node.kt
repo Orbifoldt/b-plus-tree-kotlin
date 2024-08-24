@@ -1,15 +1,15 @@
 package org.example
 
-sealed interface Node {
-    val keys: MutableList<Int>
+sealed interface Node<K : Comparable<K>, V> {
+    val keys: MutableList<K>
 
-    val leftNeighbor: Node?
-    val rightNeighbor: Node?
+    val leftNeighbor: Node<K, V>?
+    val rightNeighbor: Node<K, V>?
 
     /**
      * @return the value corresponding to [key] if it's present, or null otherwise.
      */
-    fun get(key: Int): String?
+    fun get(key: K): V?
 
     /**
      * Insert a key-value pair into the subtree defined by this node. When, after insertion, a node exceeds its capacity
@@ -19,7 +19,7 @@ sealed interface Node {
      *
      * @return a [NewNode] in case this node was split, or `null` otherwise.
      */
-    fun insert(key: Int, value: String, degree: Int): NewNode?
+    fun insert(key: K, value: V, degree: Int): NewNode<K, V>?
 
     /**
      * Split the node into two at the given index.
@@ -28,14 +28,14 @@ sealed interface Node {
      * this is a [LeafNode] the key is copied, else if this is a [InternalNode] the key is moved. The
      * current node has all keys and children/values removed that were put into the new node.
      */
-    fun split(index: Int): SplitResult
+    fun split(index: Int): SplitResult<K, V>
 
     /**
      * Removes the specified key and its corresponding value from the leaves of the subtree defined by this node.
      *
      * @return the previous value associated with the key, or `null` if the key was not present in any leaf.
      */
-    fun remove(key: Int, degree: Int): String?
+    fun remove(key: K, degree: Int): V?
 
     /**
      * Check if this Node is valid as part of a B+ tree of degree [degree].
@@ -49,24 +49,24 @@ sealed interface Node {
     fun minKeys(degree: Int) = (degree - 1) / 2  // = (m + 1)/2 - 1 = ceil(m/2) - 1
 }
 
-data class NewNode(val key: Int, val node: Node)
+data class NewNode<K : Comparable<K>, V>(val key: K, val node: Node<K, V>)
 
-data class SplitResult(val key: Int, val leftNode: Node, val rightNode: Node)
+data class SplitResult<K : Comparable<K>, V>(val key: K, val leftNode: Node<K, V>, val rightNode: Node<K, V>)
 
-private fun Node.findIndexOf(key: Int): Int = keys.withIndex()
-    .firstNotNullOfOrNull { if (it.value > key) it.index else null }  // TODO: replace with binary search
+private fun <K : Comparable<K>, V> Node<K, V>.findIndexOf(key: K): Int = keys.withIndex()
+    .firstNotNullOfOrNull { (index, k) -> if (k > key) index else null }  // TODO: replace with binary search
     ?: keys.size
 
 private operator fun Int.plus(bool: Boolean) = if (bool) this + 1 else this
 private const val ROUND_UP_SPLITTING = false
 
-data class LeafNode(
-    override val keys: MutableList<Int>,
-    val values: MutableList<String>,
-    override var leftNeighbor: LeafNode? = null,
-    override var rightNeighbor: LeafNode? = null,
-) : Node {
-    override fun get(key: Int): String? {
+data class LeafNode<K : Comparable<K>, V>(
+    override val keys: MutableList<K>,
+    val values: MutableList<V>,
+    override var leftNeighbor: LeafNode<K, V>? = null,
+    override var rightNeighbor: LeafNode<K, V>? = null,
+) : Node<K, V> {
+    override fun get(key: K): V? {
         val index = keys.indexOf(key)
         return if (index >= 0) {
             values[index]
@@ -75,7 +75,7 @@ data class LeafNode(
         }
     }
 
-    override fun insert(key: Int, value: String, degree: Int): NewNode? {
+    override fun insert(key: K, value: V, degree: Int): NewNode<K, V>? {
         val index = findIndexOf(key)
         keys.add(index, key)
         values.add(index, value)
@@ -87,7 +87,7 @@ data class LeafNode(
         return null
     }
 
-    override fun split(index: Int): SplitResult {
+    override fun split(index: Int): SplitResult<K, V> {
         // EXAMPLE: split at 1
         //              [ 1 ]
         // 0|1|2   =>   /   \
@@ -110,7 +110,7 @@ data class LeafNode(
         return SplitResult(choseOne, leftNode = this, rightNode = rhs)
     }
 
-    override fun remove(key: Int, degree: Int): String? {
+    override fun remove(key: K, degree: Int): V? {
         val index = keys.indexOfOrNull(key) ?: return null
 
         keys.removeAt(index)
@@ -134,15 +134,15 @@ data class LeafNode(
 }
 
 
-data class InternalNode(
-    override val keys: MutableList<Int>,
-    val children: MutableList<Node>,
-    override var leftNeighbor: InternalNode? = null,
-    override var rightNeighbor: InternalNode? = null,
-) : Node {
-    override fun get(key: Int): String? = children[findIndexOf(key)].get(key)
+data class InternalNode<K : Comparable<K>, V>(
+    override val keys: MutableList<K>,
+    val children: MutableList<Node<K, V>>,
+    override var leftNeighbor: InternalNode<K, V>? = null,
+    override var rightNeighbor: InternalNode<K, V>? = null,
+) : Node<K, V> {
+    override fun get(key: K): V? = children[findIndexOf(key)].get(key)
 
-    override fun insert(key: Int, value: String, degree: Int): NewNode? {
+    override fun insert(key: K, value: V, degree: Int): NewNode<K, V>? {
         val index = findIndexOf(key)
 
         val newNodeInfo = children[index].insert(key, value, degree)
@@ -161,7 +161,7 @@ data class InternalNode(
         return null
     }
 
-    override fun split(index: Int): SplitResult {
+    override fun split(index: Int): SplitResult<K, V> {
         // EXAMPLE: split at index 2                     [ 3 ]
         //                                             /       \
         //   [ 1 | 2 | 3 | 4 ]       =>        [ 1 | 2 ]        [ 4 ]
@@ -186,7 +186,7 @@ data class InternalNode(
 
     }
 
-    override fun remove(key: Int, degree: Int): String? {
+    override fun remove(key: K, degree: Int): V? {
         val index = findIndexOf(key)
         val child = children[index]
         val value = child.remove(key, degree) ?: return null

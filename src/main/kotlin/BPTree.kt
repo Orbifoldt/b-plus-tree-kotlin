@@ -3,22 +3,22 @@ package org.example
 import java.util.AbstractMap.SimpleEntry
 
 
-class BPTree(val degree: Int) {
+class BPTree<K : Comparable<K>, V>(val degree: Int) : MutableMap<K, V> {
     init {
         require(degree > 1)
     }
 
-    internal constructor(degree: Int, root: Node) : this(degree) {
+    internal constructor(degree: Int, root: Node<K, V>) : this(degree) {
         this.root = root
     }
 
-    var root: Node = LeafNode(mutableListOf(), mutableListOf(), null, null)
+    var root: Node<K, V> = LeafNode(mutableListOf(), mutableListOf(), null, null)
         private set
 
-    fun get(key: Int): String? = root.get(key)
+    override fun get(key: K): V? = root.get(key)
 
     @Synchronized  // TODO: optimize locking
-    fun insert(key: Int, value: String) {
+    override fun put(key: K, value: V): V? {
         println("Inserting value '$value' for key '$key'")
         val newNodeInfo = root.insert(key, value, degree)
         if (newNodeInfo != null) {
@@ -26,10 +26,16 @@ class BPTree(val degree: Int) {
             root = InternalNode(mutableListOf(newKey), mutableListOf(root, newNode), null, null)
         }
         validate()
+        return null // TODO
+    }
+
+    override fun putAll(from: Map<out K, V>) {
+        from.toSortedMap()  // this should optimize bulk insert (TODO: load-test)
+            .forEach { (key, value) -> put(key, value) }
     }
 
     @Synchronized  // TODO: optimize locking
-    fun remove(key: Int): String? {
+    override fun remove(key: K): V? {
         val result =  root.remove(key, degree)
 
         if(root is InternalNode && root.keys.isEmpty()){
@@ -43,28 +49,41 @@ class BPTree(val degree: Int) {
         validateNode(root, isRoot = true)
     }
 
-    private fun validateNode(node: Node, isRoot: Boolean) {
+    private fun validateNode(node: Node<K, V>, isRoot: Boolean) {
         node.checkIsValid(degree, isRoot)
         if (node is InternalNode) node.children.forEach { validateNode(it, false) }
     }
 
-    val entries: Set<Map.Entry<Int, String>>
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         get() = leafIterable().flatMapTo(mutableSetOf()) {
             it.keys.zip(it.values).map { (key, value) -> SimpleEntry(key, value) }
         }
 
-    val keys: Set<Int>
+    override val keys: MutableSet<K>
         get() = leafIterable().flatMapTo(mutableSetOf()) { it.keys }
 
-    val values: List<String>
-        get() = leafIterable().flatMap { it.values }
+    override val values: MutableCollection<V>
+        get() = leafIterable().flatMapTo(mutableListOf()) { it.values }
+
+    override fun clear() {
+        root = LeafNode(mutableListOf(), mutableListOf(), null, null)
+    }
+
+    override fun isEmpty() = root is LeafNode && (root as LeafNode).values.isEmpty()
+
+    override fun containsValue(value: V): Boolean = leafIterable().find { it.values.contains(value) } != null
+
+    override fun containsKey(key: K): Boolean = get(key) != null
+
+    override val size: Int
+        get() = leafIterable().sumOf { it.values.size }
 
     /**
-     * List keys in order
+     * Returns a sorted [List] of all keys in this tree.
      */
-    fun orderedKeys(): List<Int> = leafIterable().flatMap { it.keys }
+    fun orderedKeys(): List<K> = leafIterable().flatMap { it.keys }
 
-    private fun getSmallestLeaf(): LeafNode {
+    private fun getSmallestLeaf(): LeafNode<K, V> {
         var currentNode = root
         while(currentNode is InternalNode){
             currentNode = currentNode.children.first()
@@ -72,16 +91,8 @@ class BPTree(val degree: Int) {
         return currentNode as LeafNode
     }
 
-//    private fun leafSequence(): Sequence<LeafNode> = sequence {
-//        var current: LeafNode? = getSmallestLeaf()
-//        while(current != null) {
-//            yield(current)
-//            current = current.rightNeighbor
-//        }
-//    }
-
-    private fun leafIterator(): Iterator<LeafNode> = iterator {
-        var current: LeafNode? = getSmallestLeaf()
+    private fun leafIterator(): Iterator<LeafNode<K, V>> = iterator {
+        var current: LeafNode<K, V>? = getSmallestLeaf()
         while(current != null) {
             yield(current)
             current = current.rightNeighbor
@@ -89,29 +100,6 @@ class BPTree(val degree: Int) {
     }
 
     private fun leafIterable() =  Iterable { leafIterator() }
-
-//    override fun toString(): String = buildString {
-//        var currentRow = mutableListOf(root)
-//        var nextRow = mutableListOf<Node3>()
-//        while(currentRow.isNotEmpty()){
-//            for(x in currentRow){
-//                when (x) {
-//                    is LeafNode3 -> {
-//                        append(x.values.joinToString("|"))
-//                        append("   ")
-//                    }
-//                    is InternalNode3 -> {
-//                        append(x.keys.joinToString("|"))
-//                        append("   ")
-//                        nextRow.addAll(x.children)
-//                    }
-//                }
-//            }
-//            append("\n")
-//            currentRow = nextRow
-//            nextRow = mutableListOf()
-//        }
-//    }
 
     override fun toString(): String = buildString { root.appendTo(this, 0) }.removeSuffix("\n")
 }

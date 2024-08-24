@@ -37,22 +37,22 @@ package org.example
  * @throws IllegalArgumentException when the provided [keys] and [builderAction] would create an invalid B+ Tree of
  * the provided [degree].
  */
-fun buildBPTree(degree: Int, vararg keys: Int, builderAction: BPTreeBuilder.() -> Unit) =
-    BPTreeBuilder(degree, *keys)
+fun <K : Comparable<K>, V> buildBPTree(degree: Int, vararg keys: K, builderAction: BPTreeBuilder<K, V>.() -> Unit) =
+    BPTreeBuilder<K, V>(degree, *keys)
         .apply(builderAction)
         .build()
 
-class BPTreeBuilder internal constructor(private val degree: Int, vararg keys: Int) {
-    private val root = InternalNodeBuilder(degree, *keys, isRoot = true)
+class BPTreeBuilder<K : Comparable<K>, V> internal constructor(private val degree: Int, vararg keys: K) {
+    private val root = InternalNodeBuilder<K, V>(degree, *keys, isRoot = true)
 
-    fun internal(vararg keys: Int, childrenBuilderAction: InternalNodeBuilder.() -> Unit) =
+    fun internal(vararg keys: K, childrenBuilderAction: InternalNodeBuilder<K, V>.() -> Unit) =
         root.internal(*keys, childrenBuilderAction = childrenBuilderAction)
 
-    fun leaf(leafBuilderAction: LeafBuilder.() -> Unit) = root.leaf(leafBuilderAction)
+    fun leaf(leafBuilderAction: LeafBuilder<K, V>.() -> Unit) = root.leaf(leafBuilderAction)
 
-    fun leaf(vararg keyValues: Pair<Int, String>) = root.leaf(*keyValues)
+    fun leaf(vararg keyValues: Pair<K, V>) = root.leaf(*keyValues)
 
-    fun build(): BPTree {
+    fun build(): BPTree<K, V> {
         val rootNode = try {
             root.build()
         } catch (e: IllegalStateException) {
@@ -62,9 +62,9 @@ class BPTreeBuilder internal constructor(private val degree: Int, vararg keys: I
         return BPTree(degree, rootNode)
     }
 
-    private fun setNeighborsForAllLayers(rootNode: InternalNode) {
-        var currentLayer = ArrayDeque<Node>(listOf(rootNode))
-        var nextLayer = ArrayDeque<Node>()
+    private fun setNeighborsForAllLayers(rootNode: InternalNode<K, V>) {
+        var currentLayer = ArrayDeque<Node<K, V>>(listOf(rootNode))
+        var nextLayer = ArrayDeque<Node<K, V>>()
         while (currentLayer.isNotEmpty()) {
             currentLayer.zipWithNext().forEach { (left, right) ->
                 if (left is LeafNode && right is LeafNode) {
@@ -74,46 +74,46 @@ class BPTreeBuilder internal constructor(private val degree: Int, vararg keys: I
                 } else throw IllegalArgumentException("Expected all children to be of same type")
             }
 
-            currentLayer.filterIsInstance<InternalNode>().forEach { nextLayer.addAll(it.children) }
+            currentLayer.filterIsInstance<InternalNode<K, V>>().forEach { nextLayer.addAll(it.children) }
             currentLayer = nextLayer
             nextLayer = ArrayDeque()
         }
     }
 }
 
-internal sealed interface NodeBuilder {
-    fun build(): Node
+internal sealed interface NodeBuilder<K : Comparable<K>, V> {
+    fun build(): Node<K, V>
 }
 
-class InternalNodeBuilder internal constructor(
+class InternalNodeBuilder<K : Comparable<K>, V> internal constructor(
     private val degree: Int,
-    vararg keys: Int,
+    vararg keys: K,
     private val isRoot: Boolean = false,
-) : NodeBuilder {
-    private val keys = mutableListOf<Int>().apply { addAll(keys.toList()) }
-    private val children = mutableListOf<NodeBuilder>()
+) : NodeBuilder<K, V> {
+    private val keys = mutableListOf<K>().apply { addAll(keys.toList()) }
+    private val children = mutableListOf<NodeBuilder<K, V>>()
 
-    fun internal(vararg keys: Int, childrenBuilderAction: InternalNodeBuilder.() -> Unit) {
-        children += InternalNodeBuilder(degree, *keys)
+    fun internal(vararg keys: K, childrenBuilderAction: InternalNodeBuilder<K, V>.() -> Unit) {
+        children += InternalNodeBuilder<K, V>(degree, *keys)
             .apply(childrenBuilderAction)
     }
 
-    fun leaf(leafBuilderAction: LeafBuilder.() -> Unit) {
-        children += LeafBuilder(degree).apply(leafBuilderAction)
+    fun leaf(leafBuilderAction: LeafBuilder<K, V>.() -> Unit) {
+        children += LeafBuilder<K, V>(degree).apply(leafBuilderAction)
     }
 
-    fun leaf(vararg keyValues: Pair<Int, String>) {
+    fun leaf(vararg keyValues: Pair<K, V>) {
         children += LeafBuilder(degree, keyValues.toList())
     }
 
-    override fun build(): InternalNode {
-        val children: MutableList<Node> = if (children.all { it is InternalNodeBuilder }) {
-            children.filterIsInstance<InternalNodeBuilder>()
-                .map(InternalNodeBuilder::build)
+    override fun build(): InternalNode<K, V> {
+        val children: MutableList<Node<K, V>> = if (children.all { it is InternalNodeBuilder }) {
+            children.filterIsInstance<InternalNodeBuilder<K, V>>()
+                .map(InternalNodeBuilder<K, V>::build)
                 .toMutableList()
         } else if (children.all { it is LeafBuilder }) {
-            children.filterIsInstance<LeafBuilder>()  // to please the compiler
-                .map(LeafBuilder::build)
+            children.filterIsInstance<LeafBuilder<K, V>>()  // to please the compiler
+                .map(LeafBuilder<K, V>::build)
                 .toMutableList()
         } else throw IllegalArgumentException("Node may only contain one type of nodes, found both internal and leaves")
 
@@ -121,17 +121,17 @@ class InternalNodeBuilder internal constructor(
     }
 }
 
-class LeafBuilder internal constructor(
+class LeafBuilder<K : Comparable<K>, V> internal constructor(
     private val degree: Int,
-    keyValues: List<Pair<Int, String>> = emptyList(),
-) : NodeBuilder {
-    private val keyValuePairs = mutableListOf<Pair<Int, String>>().apply { addAll(keyValues) }
+    keyValues: List<Pair<K, V>> = emptyList(),
+) : NodeBuilder<K, V> {
+    private val keyValuePairs = mutableListOf<Pair<K, V>>().apply { addAll(keyValues) }
 
-    infix fun keyValue(keyValue: Pair<Int, String>) {
+    infix fun keyValue(keyValue: Pair<K, V>) {
         keyValuePairs.add(keyValue)
     }
 
-    override fun build(): LeafNode {
+    override fun build(): LeafNode<K, V> {
         return LeafNode(
             keys = keyValuePairs.map { it.first }.toMutableList(),
             values = keyValuePairs.map { it.second }.toMutableList(),

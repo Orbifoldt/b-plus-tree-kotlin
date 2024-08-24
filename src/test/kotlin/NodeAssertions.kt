@@ -5,28 +5,32 @@ import org.example.LeafNode
 import org.example.Node
 
 object NodeAssertions {
-    fun ObjectAssert<Node>.isLeaf(): ObjectAssert<LeafNode> =
-        this.isInstanceOf(LeafNode::class.java) as ObjectAssert<LeafNode>
+    fun <K : Comparable<K>, V> ObjectAssert<Node<K, V>>.isLeaf(): ObjectAssert<LeafNode<K, V>> =
+        this.isInstanceOf(LeafNode::class.java) as ObjectAssert<LeafNode<K, V>>
 
-    fun ObjectAssert<Node>.isInternal(): ObjectAssert<InternalNode> =
-        this.isInstanceOf(InternalNode::class.java) as ObjectAssert<InternalNode>
+    fun <K : Comparable<K>, V> ObjectAssert<Node<K, V>>.isInternal(): ObjectAssert<InternalNode<K, V>> =
+        this.isInstanceOf(InternalNode::class.java) as ObjectAssert<InternalNode<K, V>>
 
-    fun ObjectAssert<LeafNode>.containsExactly(vararg keyValuePairs: Pair<Int, String>): ObjectAssert<LeafNode> = this.also {
-        extracting { it.keys.zip(it.values) }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*keyValuePairs)
-    }
-    fun ObjectAssert<LeafNode>.isEmpty(): ObjectAssert<LeafNode> = this.also {
+    fun <K : Comparable<K>, V> ObjectAssert<LeafNode<K, V>>.containsExactly(vararg keyValuePairs: Pair<Int, String>): ObjectAssert<LeafNode<K, V>> =
+        this.also {
+            extracting { it.keys.zip(it.values) }.asInstanceOf(InstanceOfAssertFactories.LIST)
+                .containsExactly(*keyValuePairs)
+        }
+
+    fun <K : Comparable<K>, V> ObjectAssert<LeafNode<K, V>>.isEmpty(): ObjectAssert<LeafNode<K, V>> = this.also {
         extracting { it.keys.zip(it.values) }.asInstanceOf(InstanceOfAssertFactories.LIST)
             .isEmpty()
     }
 
-    fun ObjectAssert<InternalNode>.containsExactlyKeys(vararg keys: Int): ObjectAssert<InternalNode> = this.also {
-        extracting { it.keys }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*keys.toTypedArray())
-    }
+    fun <K : Comparable<K>, V> ObjectAssert<InternalNode<K, V>>.containsExactlyKeys(vararg keys: Int): ObjectAssert<InternalNode<K, V>> =
+        this.also {
+            extracting { it.keys }.asInstanceOf(InstanceOfAssertFactories.LIST)
+                .containsExactly(*keys.toTypedArray())
+        }
 
-    fun ObjectAssert<InternalNode>.andChildren(vararg children: Node): ObjectAssert<InternalNode> = this.also {
-        extracting { it.children }.asInstanceOf(InstanceOfAssertFactories.LIST)
-            .containsExactly(*children)
-    }
+    fun <K : Comparable<K>, V> ObjectAssert<InternalNode<K, V>>.andChildren(vararg children: Node<K, V>): ObjectAssert<InternalNode<K, V>> =
+        this.also {
+            extracting { it.children }.asInstanceOf(InstanceOfAssertFactories.LIST)
+                .containsExactly(*children)
+        }
 }

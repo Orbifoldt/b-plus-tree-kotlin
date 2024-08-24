@@ -573,21 +573,21 @@ class NodeTest {
     }
 
 
-    private fun setNeighbors(left: InternalNode, right: InternalNode){
+    private fun <K : Comparable<K>, V> setNeighbors(left: InternalNode<K, V>, right: InternalNode<K, V>){
         left.rightNeighbor = right
         right.leftNeighbor = left
     }
 
-    private fun setNeighbors(left: LeafNode, right: LeafNode){
+    private fun <K : Comparable<K>, V> setNeighbors(left: LeafNode<K, V>, right: LeafNode<K, V>){
         left.rightNeighbor = right
         right.leftNeighbor = left
     }
 
-    private fun setNeighborsMulti(vararg nodes: LeafNode){
+    private fun <K : Comparable<K>, V> setNeighborsMulti(vararg nodes: LeafNode<K, V>){
         nodes.toList().zipWithNext { left, right -> setNeighbors(left, right) }
     }
 
-    private fun setNeighborsMulti(vararg nodes: InternalNode){
+    private fun <K : Comparable<K>, V> setNeighborsMulti(vararg nodes: InternalNode<K, V>){
         nodes.toList().zipWithNext { left, right -> setNeighbors(left, right) }
     }
 }
