@@ -1,9 +1,11 @@
-import NodeAssertions.andChildren
-import NodeAssertions.containsExactly
-import NodeAssertions.containsExactlyKeys
+package bptree
+
+import bptree.NodeAssertions.andChildren
+import bptree.NodeAssertions.containsExactly
+import bptree.NodeAssertions.containsExactlyKeys
 import org.assertj.core.api.Assertions.assertThat
-import org.example.bptree.InternalNode
-import org.example.bptree.LeafNode
+import org.example.bptree.bptree.InternalNode
+import org.example.bptree.bptree.LeafNode
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 

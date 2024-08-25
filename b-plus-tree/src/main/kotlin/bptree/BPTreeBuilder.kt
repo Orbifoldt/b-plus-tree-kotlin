@@ -1,4 +1,8 @@
-package org.example.bptree
+package bptree
+
+import org.example.bptree.bptree.InternalNode
+import org.example.bptree.bptree.LeafNode
+import org.example.bptree.bptree.Node
 
 /**
  * Builds a new B+ Tree of degree [degree] by creating a root node with the specified [keys], and populating it using

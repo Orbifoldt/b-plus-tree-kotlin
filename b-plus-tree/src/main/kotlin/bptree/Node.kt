@@ -1,7 +1,7 @@
-package org.example.bptree
+package org.example.bptree.bptree
 
-import org.example.indexOfOrNull
-import org.example.moveInto
+import indexOfOrNull
+import moveInto
 
 sealed interface Node<K : Comparable<K>, V> {
     val keys: MutableList<K>

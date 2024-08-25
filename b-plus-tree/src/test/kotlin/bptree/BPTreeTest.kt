@@ -1,15 +1,15 @@
-import BPTreeAssertions.assertThat
-import BPTreeAssertions.hasSize
-import BPTreeAssertions.isValid
-import NodeAssertions.containsExactly
-import NodeAssertions.containsExactlyKeys
-import NodeAssertions.isEmpty
-import NodeAssertions.isInternal
-import NodeAssertions.isLeaf
+package bptree
+
+import bptree.BPTreeAssertions.assertThat
+import bptree.BPTreeAssertions.hasSize
+import bptree.BPTreeAssertions.isValid
+import bptree.NodeAssertions.containsExactly
+import bptree.NodeAssertions.containsExactlyKeys
+import bptree.NodeAssertions.isEmpty
+import bptree.NodeAssertions.isInternal
+import bptree.NodeAssertions.isLeaf
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatException
-import org.example.bptree.BPTree
-import org.example.bptree.buildBPTree
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 

@@ -1,5 +1,3 @@
-package org.example
-
 internal fun <T> Collection<T>.indexOfOrNull(element: T): Int? {
     val index = indexOf(element)
     return if(index >= 0) index else null

@@ -1,6 +1,7 @@
+package bptree
+
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.example.bptree.buildBPTree
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 

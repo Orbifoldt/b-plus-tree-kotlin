@@ -1,5 +1,6 @@
+package bptree
+
 import org.assertj.core.api.ObjectAssert
-import org.example.bptree.BPTree
 
 object BPTreeAssertions {
     /**

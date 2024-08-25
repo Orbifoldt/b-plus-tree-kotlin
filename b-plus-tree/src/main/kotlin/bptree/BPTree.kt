@@ -1,5 +1,8 @@
-package org.example.bptree
+package bptree
 
+import org.example.bptree.bptree.InternalNode
+import org.example.bptree.bptree.LeafNode
+import org.example.bptree.bptree.Node
 import java.util.AbstractMap.SimpleEntry
 
 

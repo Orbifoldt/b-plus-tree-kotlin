@@ -31,7 +31,7 @@
 
 package org.example
 
-import org.example.bptree.BPTree
+import bptree.BPTree
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
 
