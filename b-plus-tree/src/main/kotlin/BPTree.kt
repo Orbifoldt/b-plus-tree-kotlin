@@ -1,25 +1,22 @@
-package org.example
+package org.example.bptree
 
 import java.util.AbstractMap.SimpleEntry
 
 
 class BPTree<K : Comparable<K>, V>(val degree: Int) : MutableMap<K, V> {
-    init {
-        require(degree > 1)
-    }
+    init { require(degree > 1) }
+
+    var root: Node<K, V> = LeafNode(mutableListOf(), mutableListOf(), null, null)
+        private set
 
     internal constructor(degree: Int, root: Node<K, V>) : this(degree) {
         this.root = root
     }
 
-    var root: Node<K, V> = LeafNode(mutableListOf(), mutableListOf(), null, null)
-        private set
-
     override fun get(key: K): V? = root.get(key)
 
     @Synchronized  // TODO: optimize locking
     override fun put(key: K, value: V): V? {
-        println("Inserting value '$value' for key '$key'")
         val newNodeInfo = root.insert(key, value, degree)
         if (newNodeInfo != null) {
             val (newKey, newNode) = newNodeInfo

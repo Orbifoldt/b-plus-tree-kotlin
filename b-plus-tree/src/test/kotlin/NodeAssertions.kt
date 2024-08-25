@@ -1,8 +1,8 @@
 import org.assertj.core.api.InstanceOfAssertFactories
 import org.assertj.core.api.ObjectAssert
-import org.example.InternalNode
-import org.example.LeafNode
-import org.example.Node
+import org.example.bptree.InternalNode
+import org.example.bptree.LeafNode
+import org.example.bptree.Node
 
 object NodeAssertions {
     fun <K : Comparable<K>, V> ObjectAssert<Node<K, V>>.isLeaf(): ObjectAssert<LeafNode<K, V>> =

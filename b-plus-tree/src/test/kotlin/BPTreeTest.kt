@@ -6,9 +6,10 @@ import NodeAssertions.containsExactlyKeys
 import NodeAssertions.isEmpty
 import NodeAssertions.isInternal
 import NodeAssertions.isLeaf
-import org.assertj.core.api.Assertions.*
-import org.example.BPTree
-import org.example.buildBPTree
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatException
+import org.example.bptree.BPTree
+import org.example.bptree.buildBPTree
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 

@@ -2,8 +2,8 @@ import NodeAssertions.andChildren
 import NodeAssertions.containsExactly
 import NodeAssertions.containsExactlyKeys
 import org.assertj.core.api.Assertions.assertThat
-import org.example.InternalNode
-import org.example.LeafNode
+import org.example.bptree.InternalNode
+import org.example.bptree.LeafNode
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 

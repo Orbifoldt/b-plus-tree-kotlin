@@ -1,4 +1,4 @@
-package org.example
+package org.example.bptree
 
 /**
  * Builds a new B+ Tree of degree [degree] by creating a root node with the specified [keys], and populating it using

@@ -1,6 +1,6 @@
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.example.buildBPTree
+import org.example.bptree.buildBPTree
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
@@ -34,12 +34,12 @@ class BPTreeBuilderTest {
 
     @Test
     fun `Should be able to fetch values from the created tree`() {
-        assertThat(tree.get(2)).isEqualTo("2")
-        assertThat(tree.get(6)).isEqualTo("6")
-        assertThat(tree.get(7)).isEqualTo("7")
-        assertThat(tree.get(8)).isEqualTo("8")
-        assertThat(tree.get(3)).isNull()
-        assertThat(tree.get(666)).isNull()
+        assertThat(tree[2]).isEqualTo("2")
+        assertThat(tree[6]).isEqualTo("6")
+        assertThat(tree[7]).isEqualTo("7")
+        assertThat(tree[8]).isEqualTo("8")
+        assertThat(tree[3]).isNull()
+        assertThat(tree[666]).isNull()
     }
 
     @Test
